@@ -14,21 +14,21 @@ model:
   image_model: "resnet50"  # Pre-trained ResNet50
   hidden_dim: 256  # Hidden dimension for fusion layer
   num_classes: 3  # positive, neutral, negative
-  dropout: 0.3
+  dropout: 0.4
 
 # Training configuration
 training:
-  batch_size: 16
+  batch_size: 32
   num_epochs: 20
-  learning_rate: 2.0e-5
-  weight_decay: 0.01
+  learning_rate: 1.6e-5
+  weight_decay: 0.02
   val_split: 0.2  # 20% for validation
-  early_stopping_patience: 5
+  early_stopping_patience: 8
   gradient_clip: 1.0
 
 # Data processing
 data:
-  max_text_length: 128
+  max_text_length: 160
   image_size: 224
   
 # Experiment modes (for ablation study)
@@ -39,3 +39,4 @@ experiment_mode: "multimodal"
 output_dir: "outputs"
 model_save_path: "outputs/best_model.pth"
 predictions_file: "outputs/predictions.txt"
+#python main.py --mode train --config configs/config.yaml
