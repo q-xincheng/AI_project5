@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 ### 主要依赖
 
-- Python >= 3.8
+- Python >= 3.10
 - PyTorch >= 2.0.0
 - Transformers >= 4.30.0 (BERT)
 - torchvision >= 0.15.0 (ResNet)
@@ -254,7 +254,7 @@ data:
 #### 多模态融合模型（Multimodal）
 
 ```
-Validation Accuracy: 0.XXXX
+Validation Accuracy: 0.XXXX0000000
 Validation F1 Score: 0.XXXX
 
 Classification Report:
