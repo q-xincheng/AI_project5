@@ -1,0 +1,41 @@
+# Configuration for Multimodal Sentiment Classification
+
+# Random seed for reproducibility
+seed: 42
+
+# Data paths
+data_dir: "data"
+train_file: "train.txt"
+test_file: "test_without_label.txt"
+
+# Model configuration
+model:
+  text_model: "bert-base-uncased"  # Pre-trained BERT model
+  image_model: "resnet50"  # Pre-trained ResNet50
+  hidden_dim: 256  # Hidden dimension for fusion layer
+  num_classes: 3  # positive, neutral, negative
+  dropout: 0.3
+
+# Training configuration
+training:
+  batch_size: 16
+  num_epochs: 20
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  val_split: 0.2  # 20% for validation
+  early_stopping_patience: 5
+  gradient_clip: 1.0
+
+# Data processing
+data:
+  max_text_length: 128
+  image_size: 224
+  
+# Experiment modes (for ablation study)
+# Options: "multimodal", "text_only", "image_only"
+experiment_mode: "multimodal"
+
+# Output paths
+output_dir: "outputs"
+model_save_path: "outputs/best_model.pth"
+predictions_file: "outputs/predictions.txt"
