@@ -1,0 +1,2 @@
+PS D:\人工智能\实验五\AI_project5> python -c "import torch, torchvision; print(torch.__version__, torchvision.__version__, torch.cuda.is_available())"
+2.1.2+cu121 0.16.2+cu121 True
