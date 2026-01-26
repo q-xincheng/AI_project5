@@ -153,7 +153,9 @@ def train(config_path='configs/config.yaml'):
     print(f"Trainable parameters: {trainable_params:,}")
     
     # Loss and optimizer
-    criterion = nn.CrossEntropyLoss()
+    # 类别顺序：negative=0, neutral=1, positive=2
+    class_weights = torch.tensor([1.0, 2.5, 1.0], device=device)
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=config['training']['learning_rate'],
