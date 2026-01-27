@@ -55,7 +55,6 @@ stability:
 # Metrics and monitoring
 monitoring:
   save_neutral_errors: true
-  save_recall_curves: true
   verbose_metrics: true
 
 # Output paths
