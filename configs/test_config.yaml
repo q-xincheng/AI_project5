@@ -1,0 +1,66 @@
+# Test Configuration for quick validation
+# Random seed for reproducibility
+seed: 42
+
+# Data paths
+data_dir: "data"
+train_file: "train.txt"
+test_file: "test_without_label.txt"
+
+# Model configuration
+model:
+  text_model: "bert-base-uncased"
+  image_model: "resnet50"
+  hidden_dim: 256
+  num_classes: 3
+  dropout: 0.4
+
+# Training configuration
+training:
+  batch_size: 16  # Smaller for faster testing
+  num_epochs: 2   # Just 2 epochs for testing
+  learning_rate: 1.6e-5
+  weight_decay: 0.02
+  val_split: 0.2
+  early_stopping_patience: 3
+  gradient_clip: 1.0
+
+# Data processing
+data:
+  max_text_length: 128  # Shorter for faster
+  image_size: 224
+  
+# Experiment modes
+experiment_mode: "multimodal"
+
+# Class imbalance handling - test all features
+class_imbalance:
+  oversample_strategy: "random"
+  sampling_strategy: "auto"
+  class_weights: [1.0, 2.5, 1.0]
+  loss_function: "ce"
+  focal_alpha: null
+  focal_gamma: 2.0
+
+# Prediction adjustments
+prediction:
+  positive_threshold: 0.5
+  temperature: 1.0
+
+# Training stability - disabled for quick test
+stability:
+  multi_seed: null
+  k_fold: null
+
+# Metrics and monitoring
+monitoring:
+  save_neutral_errors: true
+  save_recall_curves: true
+  verbose_metrics: true
+
+# Output paths
+output_dir: "outputs"
+model_save_path: "outputs/best_model.pth"
+predictions_file: "outputs/predictions.txt"
+neutral_errors_file: "outputs/neutral_errors.txt"
+metrics_file: "outputs/detailed_metrics.txt"

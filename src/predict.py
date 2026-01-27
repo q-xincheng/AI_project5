@@ -4,6 +4,7 @@ Prediction script for test data without labels
 import os
 import yaml
 import torch
+import torch.nn.functional as F
 import pandas as pd
 from tqdm import tqdm
 from transformers import BertTokenizer
@@ -30,6 +31,15 @@ def predict(config_path='configs/config.yaml', model_path=None):
     # Device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
+    
+    # Get prediction config
+    temperature = config.get('prediction', {}).get('temperature', 1.0)
+    positive_threshold = config.get('prediction', {}).get('positive_threshold', 0.5)
+    
+    if temperature != 1.0:
+        print(f"Using temperature scaling: T={temperature}")
+    if positive_threshold != 0.5:
+        print(f"Using positive threshold adjustment: threshold={positive_threshold}")
     
     # Load tokenizer
     print("Loading tokenizer...")
@@ -64,7 +74,23 @@ def predict(config_path='configs/config.yaml', model_path=None):
             
             # Forward pass
             logits = model(input_ids, attention_mask, image)
-            predictions = torch.argmax(logits, dim=1).cpu().numpy()
+            
+            # Apply temperature scaling
+            if temperature != 1.0:
+                logits = logits / temperature
+            
+            # Get probabilities
+            probs = F.softmax(logits, dim=1)
+            
+            # Apply threshold adjustment for positive class
+            if positive_threshold != 0.5:
+                adjusted_probs = probs.clone()
+                scale_factor = 0.5 / positive_threshold
+                adjusted_probs[:, 2] = adjusted_probs[:, 2] * scale_factor
+                adjusted_probs = adjusted_probs / adjusted_probs.sum(dim=1, keepdim=True)
+                predictions = torch.argmax(adjusted_probs, dim=1).cpu().numpy()
+            else:
+                predictions = torch.argmax(probs, dim=1).cpu().numpy()
             
             # Collect results
             all_guids.extend(batch['guid'])
