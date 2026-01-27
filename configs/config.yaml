@@ -18,7 +18,7 @@ model:
 
 # Training configuration
 training:
-  batch_size: 32
+  batch_size: 16
   num_epochs: 20
   learning_rate: 1.6e-5
   weight_decay: 0.02
@@ -41,17 +41,17 @@ class_imbalance:
   # "random": RandomOverSampler, "smote": SMOTE (requires numerical features)
   oversample_strategy: "random"
   # Sampling strategy for oversampling (e.g., "auto", "minority", or dict like {0: 1000, 1: 1000, 2: 2000})
-  sampling_strategy: "auto"
+  sampling_strategy: {1: 350}
   
   # Class weights for loss function
   # Set to null for no weighting, or provide list [weight_negative, weight_neutral, weight_positive]
   # Classes: negative=0, neutral=1, positive=2
-  class_weights: [1.0, 2.5, 1.0]
+  class_weights: [1.0, 4.0, 1.0]
   
   # Loss function: "ce" (CrossEntropyLoss) or "focal" (FocalLoss)
   loss_function: "ce"
   # Focal loss parameters (only used when loss_function is "focal")
-  focal_alpha: null  # null or list [alpha_negative, alpha_neutral, alpha_positive]
+  focal_alpha: [0.231, 0.655, 0.115] #基于验证集，先算每类的逆频率 1/count，再归一化使权重和为 1
   focal_gamma: 2.0
 
 # Prediction adjustments (for validation/prediction only)
@@ -64,7 +64,6 @@ prediction:
 # Training stability
 stability:
   # Multiple seeds for training (list of integers, or null for single seed)
-  # Example: [42, 123, 456] will train 3 times
   multi_seed: null
   # Stratified k-fold cross-validation (null or integer k)
   # If set, will perform k-fold CV instead of simple train/val split
