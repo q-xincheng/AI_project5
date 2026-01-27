@@ -4,12 +4,14 @@ Prediction script for test data without labels
 import os
 import yaml
 import torch
+import torch.nn.functional as F
 import pandas as pd
 from tqdm import tqdm
 from transformers import BertTokenizer
 
 from src.dataset import get_test_loader
 from src.model import get_model
+from src.utils import apply_prediction_adjustments
 
 
 def predict(config_path='configs/config.yaml', model_path=None):
@@ -30,6 +32,15 @@ def predict(config_path='configs/config.yaml', model_path=None):
     # Device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
+    
+    # Get prediction config
+    temperature = config.get('prediction', {}).get('temperature', 1.0)
+    positive_threshold = config.get('prediction', {}).get('positive_threshold', 0.5)
+    
+    if temperature != 1.0:
+        print(f"Using temperature scaling: T={temperature}")
+    if positive_threshold != 0.5:
+        print(f"Using positive threshold adjustment: threshold={positive_threshold}")
     
     # Load tokenizer
     print("Loading tokenizer...")
@@ -64,7 +75,10 @@ def predict(config_path='configs/config.yaml', model_path=None):
             
             # Forward pass
             logits = model(input_ids, attention_mask, image)
-            predictions = torch.argmax(logits, dim=1).cpu().numpy()
+            
+            # Apply prediction adjustments (temperature scaling, threshold adjustment)
+            predictions, _ = apply_prediction_adjustments(logits, config)
+            predictions = predictions.cpu().numpy()
             
             # Collect results
             all_guids.extend(batch['guid'])

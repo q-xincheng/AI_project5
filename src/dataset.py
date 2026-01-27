@@ -4,10 +4,13 @@ Data loading utilities for multimodal sentiment classification
 import os
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
+import numpy as np
+from torch.utils.data import Dataset, DataLoader, Subset
 from PIL import Image
 from torchvision import transforms
 from transformers import BertTokenizer
+from sklearn.model_selection import StratifiedKFold
+from collections import Counter
 
 
 class MultimodalDataset(Dataset):
@@ -109,13 +112,94 @@ class MultimodalDataset(Dataset):
         }
 
 
-def get_data_loaders(config, tokenizer):
+class OversampledDataset(Dataset):
+    """Wrapper dataset that applies oversampling indices"""
+    
+    def __init__(self, base_dataset, indices):
+        """
+        Args:
+            base_dataset: Base dataset to sample from
+            indices: List of indices to sample (with repetition for oversampling)
+        """
+        self.base_dataset = base_dataset
+        self.indices = indices
+    
+    def __len__(self):
+        return len(self.indices)
+    
+    def __getitem__(self, idx):
+        return self.base_dataset[self.indices[idx]]
+
+
+def apply_oversampling(dataset, config):
+    """
+    Apply oversampling to the dataset
+    
+    Args:
+        dataset: PyTorch dataset or subset
+        config: Configuration dictionary
+    
+    Returns:
+        oversampled_dataset: Dataset with oversampling applied
+    """
+    from imblearn.over_sampling import RandomOverSampler, SMOTE
+    
+    strategy = config.get('class_imbalance', {}).get('oversample_strategy', None)
+    if strategy is None or strategy == 'null' or strategy == '':
+        return dataset
+    
+    # Get labels from dataset
+    labels = []
+    for i in range(len(dataset)):
+        item = dataset[i]
+        labels.append(item['label'].item())
+    labels = np.array(labels)
+    
+    # Create indices array
+    indices = np.arange(len(dataset)).reshape(-1, 1)
+    
+    # Get sampling strategy
+    sampling_strategy = config.get('class_imbalance', {}).get('sampling_strategy', 'auto')
+    
+    # Apply oversampling
+    if strategy == 'random':
+        sampler = RandomOverSampler(sampling_strategy=sampling_strategy, random_state=config['seed'])
+        indices_resampled, labels_resampled = sampler.fit_resample(indices, labels)
+        indices_resampled = indices_resampled.flatten()
+        
+        print(f"  Original class distribution: {Counter(labels)}")
+        print(f"  Resampled class distribution: {Counter(labels_resampled)}")
+        
+        return OversampledDataset(dataset, indices_resampled.tolist())
+    
+    elif strategy == 'smote':
+        # SMOTE requires feature vectors, not indices
+        # For SMOTE with multimodal data, we use RandomOverSampler as the implementation
+        # since SMOTE is designed for feature-based data, not raw multimodal samples
+        print("Note: Using RandomOverSampler for multimodal data (SMOTE requires pre-extracted features)")
+        sampler = RandomOverSampler(sampling_strategy=sampling_strategy, random_state=config['seed'])
+        indices_resampled, labels_resampled = sampler.fit_resample(indices, labels)
+        indices_resampled = indices_resampled.flatten()
+        
+        print(f"  Original class distribution: {Counter(labels)}")
+        print(f"  Resampled class distribution: {Counter(labels_resampled)}")
+        
+        return OversampledDataset(dataset, indices_resampled.tolist())
+    
+    else:
+        print(f"Warning: Unknown oversample strategy '{strategy}', no oversampling applied")
+        return dataset
+
+
+def get_data_loaders(config, tokenizer, fold_idx=None, k_folds=None):
     """
     Create train and validation data loaders
     
     Args:
         config: Configuration dictionary
         tokenizer: BERT tokenizer
+        fold_idx: Optional fold index for k-fold cross-validation
+        k_folds: Optional total number of folds for k-fold cross-validation
     
     Returns:
         train_loader, val_loader
@@ -130,15 +214,40 @@ def get_data_loaders(config, tokenizer):
         mode='train'
     )
     
-    # Split into train and validation
-    val_size = int(len(full_dataset) * config['training']['val_split'])
-    train_size = len(full_dataset) - val_size
+    # Get labels for stratification
+    all_labels = []
+    for i in range(len(full_dataset)):
+        all_labels.append(full_dataset[i]['label'].item())
+    all_labels = np.array(all_labels)
     
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        full_dataset, 
-        [train_size, val_size],
-        generator=torch.Generator().manual_seed(config['seed'])
-    )
+    # Split into train and validation
+    if k_folds is not None and fold_idx is not None:
+        # Stratified k-fold cross-validation
+        skf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=config['seed'])
+        folds = list(skf.split(np.arange(len(full_dataset)), all_labels))
+        train_indices, val_indices = folds[fold_idx]
+        
+        train_dataset = Subset(full_dataset, train_indices)
+        val_dataset = Subset(full_dataset, val_indices)
+        
+        print(f"Fold {fold_idx + 1}/{k_folds}: Train size: {len(train_dataset)}, Val size: {len(val_dataset)}")
+    else:
+        # Simple train/val split with stratification
+        from sklearn.model_selection import train_test_split
+        train_indices, val_indices = train_test_split(
+            np.arange(len(full_dataset)),
+            test_size=config['training']['val_split'],
+            random_state=config['seed'],
+            stratify=all_labels
+        )
+        
+        train_dataset = Subset(full_dataset, train_indices)
+        val_dataset = Subset(full_dataset, val_indices)
+    
+    # Apply oversampling to training data only
+    if config.get('class_imbalance', {}).get('oversample_strategy'):
+        print("Applying oversampling to training data...")
+        train_dataset = apply_oversampling(train_dataset, config)
     
     # Create data loaders
     train_loader = DataLoader(

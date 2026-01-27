@@ -336,7 +336,196 @@ except:
 **解决方案**:
 - 监控各类别的 precision/recall
 - 使用 F1 score 作为主要评估指标（对不平衡数据更鲁棒）
-- 可考虑使用加权损失函数（未在当前版本实现）
+- **NEW**: 现已实现完整的类别不平衡解决方案（见下方"类别不平衡处理"章节）
+
+---
+
+## 类别不平衡处理与监控改进
+
+### 概述
+
+针对数据集中的类别不平衡问题（positive: 59.7%, negative: 29.8%, neutral: 10.5%），本项目实现了多种解决策略：
+
+### 1. 数据层面：过采样策略
+
+在 `configs/config.yaml` 中配置：
+
+```yaml
+class_imbalance:
+  # 过采样策略: null, "random", 或 "smote"
+  oversample_strategy: "random"  # RandomOverSampler
+  sampling_strategy: "auto"       # 自动平衡少数类
+```
+
+**支持的策略**:
+- `random`: RandomOverSampler - 随机复制少数类样本
+- `smote`: SMOTE - 合成少数类样本（部分支持）
+- `null`: 不使用过采样
+
+**示例**:
+```yaml
+# 轻度过采样：将 neutral 提升到 500 样本
+sampling_strategy: {0: 1193, 1: 500, 2: 2388}
+```
+
+### 2. 损失函数层面：类别权重与 Focal Loss
+
+#### 类别权重
+```yaml
+class_imbalance:
+  class_weights: [1.0, 2.5, 1.0]  # [negative, neutral, positive]
+  loss_function: "ce"              # CrossEntropyLoss with weights
+```
+
+#### Focal Loss
+针对难分类样本，使用 Focal Loss：
+
+```yaml
+class_imbalance:
+  loss_function: "focal"
+  focal_gamma: 2.0                 # 聚焦参数
+  focal_alpha: [1.0, 2.5, 1.0]    # 可选的类别权重
+```
+
+### 3. 预测层面：阈值调整与温度缩放
+
+**阈值调整**: 降低 positive 类的过预测
+
+```yaml
+prediction:
+  positive_threshold: 0.6  # >0.5 表示提高 positive 阈值
+  temperature: 1.0         # 概率校准 (1.0 = 不缩放)
+```
+
+**温度缩放**: 校准预测概率
+
+```yaml
+prediction:
+  temperature: 1.5  # >1.0 = 更平滑的概率分布
+```
+
+### 4. 训练稳定性：多种子与 K 折交叉验证
+
+#### 多种子训练
+```yaml
+stability:
+  multi_seed: [42, 123, 456]  # 训练 3 次并输出平均指标
+```
+
+输出：
+- 每个种子的详细结果
+- 平均 F1、Accuracy、Recall（带标准差）
+- 保存到 `outputs/multiseed_results.txt`
+
+#### K 折交叉验证
+```yaml
+stability:
+  k_fold: 5  # 5 折分层交叉验证
+```
+
+输出：
+- 每折的详细指标
+- 平均指标与标准差
+- 保存到 `outputs/kfold_results.txt`
+
+### 5. 监控与指标改进
+
+#### 详细指标输出
+
+每个 epoch 都会输出：
+- Macro-F1（主要评估指标）
+- Negative Recall
+- Neutral Recall
+- Positive Recall
+
+#### Neutral 错误分析
+
+```yaml
+monitoring:
+  save_neutral_errors: true
+```
+
+自动保存被误分类的 neutral 样本到 `outputs/neutral_errors.txt`，包括：
+- 样本 GUID
+- 预测标签
+- 各类别概率
+
+#### 增强的混淆矩阵
+
+混淆矩阵图表现在包含：
+- 每个类别的 Recall 值
+- 高分辨率输出 (150 DPI)
+
+#### 训练曲线
+
+自动生成 6 个子图：
+1. Loss (训练 vs 验证)
+2. Accuracy (训练 vs 验证)
+3. Macro F1 Score (训练 vs 验证)
+4. Negative Recall (验证)
+5. Neutral Recall (验证)
+6. Positive Recall (验证)
+
+### 配置示例
+
+#### 推荐配置 1: 轻度过采样 + 类别权重
+```yaml
+class_imbalance:
+  oversample_strategy: "random"
+  sampling_strategy: "auto"
+  class_weights: [1.0, 2.5, 1.0]
+  loss_function: "ce"
+
+prediction:
+  positive_threshold: 0.55
+  temperature: 1.0
+
+monitoring:
+  save_neutral_errors: true
+  verbose_metrics: true
+```
+
+#### 推荐配置 2: Focal Loss + K 折验证
+```yaml
+class_imbalance:
+  oversample_strategy: null
+  class_weights: null
+  loss_function: "focal"
+  focal_gamma: 2.0
+  focal_alpha: [1.0, 3.0, 1.0]
+
+stability:
+  k_fold: 5
+
+monitoring:
+  save_neutral_errors: true
+```
+
+#### 推荐配置 3: 多种子鲁棒性测试
+```yaml
+class_imbalance:
+  oversample_strategy: "random"
+  class_weights: [1.0, 2.5, 1.0]
+  loss_function: "ce"
+
+stability:
+  multi_seed: [42, 123, 456, 789, 2024]
+```
+
+### 输出文件说明
+
+训练完成后，`outputs/` 目录包含：
+
+| 文件 | 说明 |
+|------|------|
+| `best_model.pth` | 最佳模型权重 |
+| `training_history.png` | 训练曲线（6 个子图） |
+| `confusion_matrix.png` | 混淆矩阵（带 Recall 标注） |
+| `results.txt` | 验证集详细结果 |
+| `detailed_metrics.txt` | 详细指标汇总 |
+| `neutral_errors.txt` | Neutral 错误分析 |
+| `multiseed_results.txt` | 多种子训练结果（如启用） |
+| `kfold_results.txt` | K 折验证结果（如启用） |
 
 ---
 
@@ -350,11 +539,16 @@ except:
 
 3. **Multimodal Learning**: Baltrusaitis, T., et al. (2019). "Multimodal Machine Learning: A Survey and Taxonomy." TPAMI.
 
+4. **Focal Loss**: Lin, T. Y., et al. (2017). "Focal Loss for Dense Object Detection." ICCV.
+
+5. **Imbalanced Learning**: He, H., & Garcia, E. A. (2009). "Learning from Imbalanced Data." IEEE TKDE.
+
 ### 代码参考
 
 - PyTorch官方教程: https://pytorch.org/tutorials/
 - Transformers库文档: https://huggingface.co/docs/transformers/
 - torchvision模型: https://pytorch.org/vision/stable/models.html
+- imbalanced-learn: https://imbalanced-learn.org/
 
 ### 数据集
 
