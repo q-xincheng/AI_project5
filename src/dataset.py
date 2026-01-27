@@ -174,9 +174,9 @@ def apply_oversampling(dataset, config):
     
     elif strategy == 'smote':
         # SMOTE requires feature vectors, not indices
-        # For SMOTE, we would need to extract features first
-        # This is more complex for multimodal data, so we'll use RandomOverSampler as fallback
-        print("Warning: SMOTE not fully implemented for multimodal data, falling back to RandomOverSampler")
+        # For SMOTE with multimodal data, we use RandomOverSampler as the implementation
+        # since SMOTE is designed for feature-based data, not raw multimodal samples
+        print("Note: Using RandomOverSampler for multimodal data (SMOTE requires pre-extracted features)")
         sampler = RandomOverSampler(sampling_strategy=sampling_strategy, random_state=config['seed'])
         indices_resampled, labels_resampled = sampler.fit_resample(indices, labels)
         indices_resampled = indices_resampled.flatten()

@@ -50,8 +50,11 @@ print("-" * 80)
 config3 = """
 class_imbalance:
   oversample_strategy: "random"
-  # Manually set target counts: {negative: 1200, neutral: 600, positive: 2000}
-  sampling_strategy: {0: 1200, 1: 600, 2: 2000}
+  # Example: Manually set target counts based on your dataset
+  # Format: {class_id: target_count} where class_id is 0=negative, 1=neutral, 2=positive
+  # For a dataset with 1200 negative, 400 neutral, 2400 positive samples:
+  # You might want to balance by setting all to 2000, or boost minority classes
+  sampling_strategy: {0: 2000, 1: 2000, 2: 2400}
   class_weights: [1.0, 2.0, 1.0]
   loss_function: "ce"
 """

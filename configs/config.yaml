@@ -74,8 +74,6 @@ stability:
 monitoring:
   # Whether to save neutral error analysis
   save_neutral_errors: true
-  # Whether to save per-class recall curves
-  save_recall_curves: true
   # Whether to print detailed per-class metrics
   verbose_metrics: true
 

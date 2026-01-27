@@ -91,7 +91,7 @@ def get_criterion(config, device):
         focal_gamma = config.get('class_imbalance', {}).get('focal_gamma', 2.0)
         
         if focal_alpha is not None:
-            focal_alpha = torch.tensor(focal_alpha, dtype=torch.float32)
+            focal_alpha = torch.tensor(focal_alpha, dtype=torch.float32, device=device)
         
         criterion = FocalLoss(alpha=focal_alpha, gamma=focal_gamma, reduction='mean')
         print(f"Using Focal Loss (gamma={focal_gamma}, alpha={focal_alpha})")

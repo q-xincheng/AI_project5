@@ -17,6 +17,7 @@ import seaborn as sns
 from src.dataset import get_data_loaders
 from src.model import get_model
 from src.loss import get_criterion
+from src.utils import apply_prediction_adjustments
 
 
 def set_seed(seed):
@@ -79,13 +80,6 @@ def evaluate(model, data_loader, criterion, device, config=None, save_neutral_er
     all_guids = []
     all_probs = []
     
-    # Get prediction config
-    temperature = 1.0
-    positive_threshold = 0.5
-    if config:
-        temperature = config.get('prediction', {}).get('temperature', 1.0)
-        positive_threshold = config.get('prediction', {}).get('positive_threshold', 0.5)
-    
     with torch.no_grad():
         for batch in tqdm(data_loader, desc='Evaluating'):
             # Move to device
@@ -99,26 +93,9 @@ def evaluate(model, data_loader, criterion, device, config=None, save_neutral_er
             logits = model(input_ids, attention_mask, image)
             loss = criterion(logits, labels)
             
-            # Apply temperature scaling
-            if temperature != 1.0:
-                logits = logits / temperature
-            
-            # Get probabilities
-            probs = F.softmax(logits, dim=1)
-            
-            # Apply threshold adjustment for positive class
-            if positive_threshold != 0.5:
-                # Adjust the decision boundary for positive class (class 2)
-                # If positive_threshold > 0.5, make it harder to predict positive
-                adjusted_probs = probs.clone()
-                # Scale positive class probability
-                scale_factor = 0.5 / positive_threshold
-                adjusted_probs[:, 2] = adjusted_probs[:, 2] * scale_factor
-                # Re-normalize
-                adjusted_probs = adjusted_probs / adjusted_probs.sum(dim=1, keepdim=True)
-                predictions = torch.argmax(adjusted_probs, dim=1).cpu().numpy()
-            else:
-                predictions = torch.argmax(probs, dim=1).cpu().numpy()
+            # Apply prediction adjustments (temperature scaling, threshold adjustment)
+            predictions, probs = apply_prediction_adjustments(logits, config)
+            predictions = predictions.cpu().numpy()
             
             # Statistics
             total_loss += loss.item()

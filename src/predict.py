@@ -11,6 +11,7 @@ from transformers import BertTokenizer
 
 from src.dataset import get_test_loader
 from src.model import get_model
+from src.utils import apply_prediction_adjustments
 
 
 def predict(config_path='configs/config.yaml', model_path=None):
@@ -75,22 +76,9 @@ def predict(config_path='configs/config.yaml', model_path=None):
             # Forward pass
             logits = model(input_ids, attention_mask, image)
             
-            # Apply temperature scaling
-            if temperature != 1.0:
-                logits = logits / temperature
-            
-            # Get probabilities
-            probs = F.softmax(logits, dim=1)
-            
-            # Apply threshold adjustment for positive class
-            if positive_threshold != 0.5:
-                adjusted_probs = probs.clone()
-                scale_factor = 0.5 / positive_threshold
-                adjusted_probs[:, 2] = adjusted_probs[:, 2] * scale_factor
-                adjusted_probs = adjusted_probs / adjusted_probs.sum(dim=1, keepdim=True)
-                predictions = torch.argmax(adjusted_probs, dim=1).cpu().numpy()
-            else:
-                predictions = torch.argmax(probs, dim=1).cpu().numpy()
+            # Apply prediction adjustments (temperature scaling, threshold adjustment)
+            predictions, _ = apply_prediction_adjustments(logits, config)
+            predictions = predictions.cpu().numpy()
             
             # Collect results
             all_guids.extend(batch['guid'])
