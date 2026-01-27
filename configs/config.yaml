@@ -35,8 +35,54 @@ data:
 # Options: "multimodal", "text_only", "image_only"
 experiment_mode: "multimodal"
 
+# Class imbalance handling
+class_imbalance:
+  # Oversampling strategy: null, "random", or "smote"
+  # "random": RandomOverSampler, "smote": SMOTE (requires numerical features)
+  oversample_strategy: "random"
+  # Sampling strategy for oversampling (e.g., "auto", "minority", or dict like {0: 1000, 1: 1000, 2: 2000})
+  sampling_strategy: "auto"
+  
+  # Class weights for loss function
+  # Set to null for no weighting, or provide list [weight_negative, weight_neutral, weight_positive]
+  # Classes: negative=0, neutral=1, positive=2
+  class_weights: [1.0, 2.5, 1.0]
+  
+  # Loss function: "ce" (CrossEntropyLoss) or "focal" (FocalLoss)
+  loss_function: "ce"
+  # Focal loss parameters (only used when loss_function is "focal")
+  focal_alpha: null  # null or list [alpha_negative, alpha_neutral, alpha_positive]
+  focal_gamma: 2.0
+
+# Prediction adjustments (for validation/prediction only)
+prediction:
+  # Threshold adjustment for positive class (>0.5 means higher threshold to predict positive)
+  positive_threshold: 0.5
+  # Temperature scaling for probability calibration (1.0 = no scaling, >1.0 = softer, <1.0 = sharper)
+  temperature: 1.0
+
+# Training stability
+stability:
+  # Multiple seeds for training (list of integers, or null for single seed)
+  # Example: [42, 123, 456] will train 3 times
+  multi_seed: null
+  # Stratified k-fold cross-validation (null or integer k)
+  # If set, will perform k-fold CV instead of simple train/val split
+  k_fold: null
+
+# Metrics and monitoring
+monitoring:
+  # Whether to save neutral error analysis
+  save_neutral_errors: true
+  # Whether to save per-class recall curves
+  save_recall_curves: true
+  # Whether to print detailed per-class metrics
+  verbose_metrics: true
+
 # Output paths
 output_dir: "outputs"
 model_save_path: "outputs/best_model.pth"
 predictions_file: "outputs/predictions.txt"
+neutral_errors_file: "outputs/neutral_errors.txt"
+metrics_file: "outputs/detailed_metrics.txt"
 #python main.py --mode train --config configs/config.yaml
