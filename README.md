@@ -61,7 +61,7 @@ AI_project5_qinxincheng10235501453/
 │   ├── predict.py             # 预测脚本
 │   └── ablation_study.py      # 消融实验脚本
 ├── outputs/                    # 输出目录
-│   ├── best_model.pth         # 最佳模型权重
+│   ├── best_model.pth         # 最佳模型权重，文件过大，就没传到github
 │   ├── predictions.txt        # 测试集预测结果
 │   ├── confusion_matrix.png   # 混淆矩阵
 │   └── training_history.png   # 训练曲线
@@ -136,7 +136,7 @@ model:
   image_model: "resnet50"            # 图像编码器
   hidden_dim: 256                    # 融合层隐藏维度
   num_classes: 3                     # 三分类
-  dropout: 0.3                       # Dropout率
+  dropout: 0.4                       # Dropout率
 ```
 
 ### 训练配置
@@ -144,17 +144,17 @@ model:
 training:
   batch_size: 16                     # 批大小
   num_epochs: 20                     # 最大训练轮数
-  learning_rate: 2.0e-5              # 学习率（AdamW）
-  weight_decay: 0.01                 # 权重衰减
+  learning_rate: 1.6e-5              # 学习率（AdamW）
+  weight_decay: 0.02                 # 权重衰减
   val_split: 0.2                     # 验证集比例（20%）
-  early_stopping_patience: 5         # 早停耐心值
+  early_stopping_patience: 8         # 早停耐心值
   gradient_clip: 1.0                 # 梯度裁剪
 ```
 
 ### 数据处理
 ```yaml
 data:
-  max_text_length: 128               # 文本最大长度
+  max_text_length: 160               # 文本最大长度
   image_size: 224                    # 图像尺寸（ResNet标准）
 ```
 
@@ -231,8 +231,8 @@ data:
 
 #### 5. **训练策略**
 - **损失函数**: CrossEntropyLoss
-- **优化器**: AdamW (学习率 2e-5, 权重衰减 0.01)
-- **早停**: 验证F1连续5轮不提升则停止
+- **优化器**: AdamW (学习率 1.6e-5, 权重衰减 0.02)
+- **早停**: 验证F1连续8轮不提升则停止
 - **梯度裁剪**: 最大范数为1.0
 
 ### 设计亮点
@@ -312,39 +312,17 @@ except:
     image = Image.new('RGB', (224, 224), color='white')
 ```
 
-### Bug 2: GPU内存不足
+### Bug 2: GPU内存不足，训练时间过长
 
 **问题**: 批大小过大导致 CUDA out of memory。
 
-**解决方案**:
-- 将 batch_size 从 32 降至 16
-- 冻结 ResNet 早期层减少显存占用
-- 使用梯度累积（可选）
+**解决方案**:将 batch_size 从 32 降至 16
 
-### Bug 3: BERT下载慢或失败
+### Bug 3: 标签不平衡
 
-**问题**: 首次运行时下载 BERT 模型耗时长。
+**问题**: 某次训练数据中三类标签分布不均衡。
 
-**解决方案**:
-- 使用镜像源或提前下载模型
-- 或者改用更小的模型如 `distilbert-base-uncased`
-
-### Bug 4: 标签不平衡
-
-**问题**: 训练数据中三类标签分布可能不均衡。
-
-**解决方案**:
-- 监控各类别的 precision/recall
-- 使用 F1 score 作为主要评估指标（对不平衡数据更鲁棒）
-- **NEW**: 现已实现完整的类别不平衡解决方案（见下方"类别不平衡处理"章节）
-
----
-
-## 类别不平衡处理与监控改进
-
-### 概述
-
-针对数据集中的类别不平衡问题（positive: 59.7%, negative: 29.8%, neutral: 10.5%），本项目实现了多种解决策略：
+数据集中的类别不平衡问题（positive: 59.7%, negative: 29.8%, neutral: 10.5%），本项目实现了多种解决策略：
 
 ### 1. 数据层面：过采样策略
 
@@ -373,7 +351,7 @@ sampling_strategy: {0: 1193, 1: 500, 2: 2388}
 #### 类别权重
 ```yaml
 class_imbalance:
-  class_weights: [1.0, 2.5, 1.0]  # [negative, neutral, positive]
+  class_weights: [1.0, 4.0, 1.0]  # [negative, neutral, positive]
   loss_function: "ce"              # CrossEntropyLoss with weights
 ```
 
@@ -384,7 +362,7 @@ class_imbalance:
 class_imbalance:
   loss_function: "focal"
   focal_gamma: 2.0                 # 聚焦参数
-  focal_alpha: [1.0, 2.5, 1.0]    # 可选的类别权重
+  focal_alpha: [0.231, 0.655, 0.115]    # #基于验证集，先算每类的逆频率 1/count，再归一化使权重和为 1
 ```
 
 ### 3. 预测层面：阈值调整与温度缩放
@@ -393,15 +371,8 @@ class_imbalance:
 
 ```yaml
 prediction:
-  positive_threshold: 0.6  # >0.5 表示提高 positive 阈值
-  temperature: 1.0         # 概率校准 (1.0 = 不缩放)
-```
-
-**温度缩放**: 校准预测概率
-
-```yaml
-prediction:
-  temperature: 1.5  # >1.0 = 更平滑的概率分布
+  positive_threshold: 0.5 
+  temperature: 1.0     
 ```
 
 ### 4. 训练稳定性：多种子与 K 折交叉验证
@@ -428,15 +399,6 @@ stability:
 - 平均指标与标准差
 - 保存到 `outputs/kfold_results.txt`
 
-### 5. 监控与指标改进
-
-#### 详细指标输出
-
-每个 epoch 都会输出：
-- Macro-F1（主要评估指标）
-- Negative Recall
-- Neutral Recall
-- Positive Recall
 
 #### Neutral 错误分析
 
@@ -472,12 +434,12 @@ monitoring:
 ```yaml
 class_imbalance:
   oversample_strategy: "random"
-  sampling_strategy: "auto"
-  class_weights: [1.0, 2.5, 1.0]
+  sampling_strategy: "{1: 350}"
+  class_weights: [1.0, 4.0, 1.0]
   loss_function: "ce"
 
 prediction:
-  positive_threshold: 0.55
+  positive_threshold: 0.5
   temperature: 1.0
 
 monitoring:
@@ -488,11 +450,11 @@ monitoring:
 #### 推荐配置 2: Focal Loss + K 折验证
 ```yaml
 class_imbalance:
-  oversample_strategy: null
-  class_weights: null
+  oversample_strategy: {1: 350}
+  class_weights: [1.0, 4.0, 1.0]
   loss_function: "focal"
   focal_gamma: 2.0
-  focal_alpha: [1.0, 3.0, 1.0]
+  focal_alpha: [0.231, 0.655, 0.115] 
 
 stability:
   k_fold: 5
@@ -505,11 +467,11 @@ monitoring:
 ```yaml
 class_imbalance:
   oversample_strategy: "random"
-  class_weights: [1.0, 2.5, 1.0]
+  class_weights: [1.0, 4.0, 1.0]
   loss_function: "ce"
 
 stability:
-  multi_seed: [42, 123, 456, 789, 2024]
+  multi_seed: [[42, 123, 456]
 ```
 
 ### 输出文件说明
@@ -559,12 +521,7 @@ stability:
 
 ---
 
-## 许可与引用
 
-本项目为课程作业，仅供学习参考。
-
-**作者**: 秦鑫成 (Student ID: 10235501453)  
+**作者**: 秦鑫成_10235501453  
 **课程**: 当代人工智能实验五  
-**完成时间**: 2024
-
-如有问题，请联系: qinxincheng@example.com
+**联系方式**: 3100829844@qq.com，15877816759
