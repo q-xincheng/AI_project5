@@ -17,7 +17,7 @@ def run_ablation_study():
     base_config_path = 'configs/config.yaml'
     
     # Load base config
-    with open(base_config_path, 'r') as f:
+    with open(base_config_path, 'r', encoding='utf-8') as f:
         base_config = yaml.safe_load(f)
     
     modes = ['text_only', 'image_only', 'multimodal']
