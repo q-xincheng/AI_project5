@@ -61,13 +61,13 @@ AI_project5_qinxincheng10235501453/
 │   ├── predict.py             # 预测脚本
 │   └── ablation_study.py      # 消融实验脚本
 ├── outputs/                    # 输出目录
-│   ├── best_model.pth         # 最佳模型权重，文件过大，就没传到github
+│   ├── best_model.pth         # 最佳模型权重，文件过大，没传到github
 │   ├── predictions.txt        # 测试集预测结果
 │   ├── confusion_matrix.png   # 混淆矩阵
 │   └── training_history.png   # 训练曲线
-└── reports/                    # 实验报告
-    └── ablation_study.md      # 消融实验结果
-```
+    └── ```
+
+
 
 ---
 
@@ -247,27 +247,8 @@ data:
 
 ## 实验结果
 
-### 1. 验证集结果
+### 1. 验证集结果见outputs\predictions.txt
 
-本节展示在验证集（20% 训练数据）上的性能：
-
-#### 多模态融合模型（Multimodal）
-
-```
-Validation Accuracy: 0.XXXX0000000
-Validation F1 Score: 0.XXXX
-
-Classification Report:
-              precision    recall  f1-score   support
-    negative       0.XX      0.XX      0.XX       XXX
-     neutral       0.XX      0.XX      0.XX       XXX
-    positive       0.XX      0.XX      0.XX       XXX
-    accuracy                           0.XX       XXX
-   macro avg       0.XX      0.XX      0.XX       XXX
-weighted avg       0.XX      0.XX      0.XX       XXX
-```
-
-*注: 实际结果将在运行实验后自动填充*
 
 ### 2. 消融实验结果
 
@@ -275,14 +256,9 @@ weighted avg       0.XX      0.XX      0.XX       XXX
 
 | 模式 | 验证准确率 | 验证F1 | 说明 |
 |------|----------|--------|------|
-| Text-only | XX.X% | 0.XXX | 仅使用文本信息 |
-| Image-only | XX.X% | 0.XXX | 仅使用图像信息 |
-| Multimodal | XX.X% | 0.XXX | 融合文本+图像 |
+| Text-only | 0.6285 | 0.5311 | 仅使用文本信息 |
+| Image-only |0.4526 | 0.3976 | 仅使用图像信息 |
 
-**关键发现**:
-- 多模态融合模型预期优于单模态模型
-- 文本信息对情感分类的贡献 vs 图像信息
-- 具体结果见 `reports/ablation_study.md`
 
 ### 3. 可视化结果
 
@@ -512,12 +488,6 @@ stability:
 - torchvision模型: https://pytorch.org/vision/stable/models.html
 - imbalanced-learn: https://imbalanced-learn.org/
 
-### 数据集
-
-本项目使用的多模态情感数据集包含：
-- 图像: JPEG格式，社交媒体风格
-- 文本: 短文本，通常包含话题标签
-- 标签: positive / neutral / negative
 
 ---
 
