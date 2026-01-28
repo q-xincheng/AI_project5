@@ -23,7 +23,7 @@ def predict(config_path='configs/config.yaml', model_path=None):
         model_path: Path to trained model (if None, uses config default)
     """
     # Load configuration
-    with open(config_path, 'r') as f:
+    with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
     
     if model_path is None:
