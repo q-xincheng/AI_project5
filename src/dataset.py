@@ -29,6 +29,7 @@ class MultimodalDataset(Dataset):
             transform: Optional image transformation
         """
         self.data = pd.read_csv(data_file)
+        self.data['tag'] = self.data['tag'].fillna('null')
         self.data_dir = data_dir
         self.tokenizer = tokenizer
         self.max_length = max_length
