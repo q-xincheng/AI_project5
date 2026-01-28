@@ -29,12 +29,7 @@ pip install -r requirements.txt
 
 ### 主要依赖
 
-- Python >= 3.10
-- PyTorch >= 2.0.0
-- Transformers >= 4.30.0 (BERT)
-- torchvision >= 0.15.0 (ResNet)
-- Pillow, pandas, numpy, scikit-learn
-- matplotlib, seaborn (可视化)
+
 
 ---
 
