@@ -1,0 +1,10 @@
+Detailed Training Metrics
+================================================================================
+
+best_epoch: 19
+best_val_f1: 0.5738950943214504
+best_val_acc: 0.66625
+negative_recall: 0.6386554621848739
+neutral_recall: 0.36904761904761907
+positive_recall: 0.7322175732217573
+total_neutral_errors: 53

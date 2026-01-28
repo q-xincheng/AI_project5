@@ -1,0 +1,170 @@
+Neutral Classification Errors
+================================================================================
+
+Total neutral samples misclassified: 53
+
+
+Neutral misclassified as NEGATIVE: 15 samples
+--------------------------------------------------------------------------------
+GUID: 140
+  Probabilities: neg=0.6373, neu=0.0008, pos=0.3619
+
+GUID: 2615
+  Probabilities: neg=0.9999, neu=0.0001, pos=0.0000
+
+GUID: 927
+  Probabilities: neg=0.9999, neu=0.0000, pos=0.0001
+
+GUID: 618
+  Probabilities: neg=0.9614, neu=0.0368, pos=0.0017
+
+GUID: 3797
+  Probabilities: neg=0.9866, neu=0.0089, pos=0.0045
+
+GUID: 865
+  Probabilities: neg=0.9998, neu=0.0001, pos=0.0001
+
+GUID: 2937
+  Probabilities: neg=0.9904, neu=0.0096, pos=0.0000
+
+GUID: 4650
+  Probabilities: neg=0.9967, neu=0.0000, pos=0.0033
+
+GUID: 24
+  Probabilities: neg=1.0000, neu=0.0000, pos=0.0000
+
+GUID: 2864
+  Probabilities: neg=0.9972, neu=0.0001, pos=0.0026
+
+GUID: 2728
+  Probabilities: neg=1.0000, neu=0.0000, pos=0.0000
+
+GUID: 3829
+  Probabilities: neg=0.9999, neu=0.0000, pos=0.0000
+
+GUID: 155
+  Probabilities: neg=0.9986, neu=0.0000, pos=0.0014
+
+GUID: 3299
+  Probabilities: neg=0.9999, neu=0.0000, pos=0.0001
+
+GUID: 1261
+  Probabilities: neg=0.9891, neu=0.0000, pos=0.0109
+
+
+Neutral misclassified as POSITIVE: 38 samples
+--------------------------------------------------------------------------------
+GUID: 39
+  Probabilities: neg=0.0002, neu=0.0000, pos=0.9998
+
+GUID: 1310
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 3537
+  Probabilities: neg=0.0000, neu=0.0001, pos=0.9998
+
+GUID: 180
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 999
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 2705
+  Probabilities: neg=0.0001, neu=0.0000, pos=0.9999
+
+GUID: 1390
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 580
+  Probabilities: neg=0.0001, neu=0.0000, pos=0.9999
+
+GUID: 433
+  Probabilities: neg=0.0003, neu=0.0857, pos=0.9140
+
+GUID: 788
+  Probabilities: neg=0.0000, neu=0.0001, pos=0.9999
+
+GUID: 3689
+  Probabilities: neg=0.0000, neu=0.0001, pos=0.9999
+
+GUID: 2389
+  Probabilities: neg=0.0041, neu=0.0004, pos=0.9955
+
+GUID: 870
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 3673
+  Probabilities: neg=0.0004, neu=0.0008, pos=0.9988
+
+GUID: 2862
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 3333
+  Probabilities: neg=0.0001, neu=0.0000, pos=0.9998
+
+GUID: 2038
+  Probabilities: neg=0.0018, neu=0.0774, pos=0.9208
+
+GUID: 2102
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 2110
+  Probabilities: neg=0.0221, neu=0.3018, pos=0.6761
+
+GUID: 2985
+  Probabilities: neg=0.0010, neu=0.0092, pos=0.9898
+
+GUID: 2761
+  Probabilities: neg=0.1793, neu=0.2458, pos=0.5749
+
+GUID: 591
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 4092
+  Probabilities: neg=0.0005, neu=0.0025, pos=0.9971
+
+GUID: 243
+  Probabilities: neg=0.0000, neu=0.0001, pos=0.9999
+
+GUID: 3808
+  Probabilities: neg=0.0351, neu=0.0000, pos=0.9649
+
+GUID: 2453
+  Probabilities: neg=0.0010, neu=0.0004, pos=0.9987
+
+GUID: 3267
+  Probabilities: neg=0.0000, neu=0.0021, pos=0.9979
+
+GUID: 2561
+  Probabilities: neg=0.0006, neu=0.2767, pos=0.7227
+
+GUID: 985
+  Probabilities: neg=0.0049, neu=0.0000, pos=0.9951
+
+GUID: 3212
+  Probabilities: neg=0.0059, neu=0.0000, pos=0.9941
+
+GUID: 2665
+  Probabilities: neg=0.0003, neu=0.0000, pos=0.9997
+
+GUID: 3866
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 4863
+  Probabilities: neg=0.0010, neu=0.0000, pos=0.9990
+
+GUID: 2056
+  Probabilities: neg=0.3840, neu=0.0003, pos=0.6156
+
+GUID: 181
+  Probabilities: neg=0.0001, neu=0.0001, pos=0.9999
+
+GUID: 984
+  Probabilities: neg=0.0169, neu=0.0001, pos=0.9830
+
+GUID: 905
+  Probabilities: neg=0.0000, neu=0.0000, pos=1.0000
+
+GUID: 330
+  Probabilities: neg=0.0002, neu=0.0008, pos=0.9990
+
